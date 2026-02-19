@@ -31,6 +31,8 @@ class BookController extends Controller
         ]);
     }
 
+    //**  Prestar Libro*/
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -66,6 +68,47 @@ class BookController extends Controller
                 'book_id' => $loan->book_id,
             ]
         ], 201);
+    }
+
+    // ** Registro de Devolución */
+    public function returnBook($loan_id)
+    {
+        $loan = Loan::find($loan_id);
+        if (!$loan) {
+            return response()->json(['message' => 'Préstamo no encontrado'], 404);
+        }
+    
+        $book = Book::find($loan->book_id);
+        if (!$book) {
+            return response()->json(['message' => 'Libro no encontrado'], 404);
+        }
+    
+        // Verificar si el libro ya fue devuelto
+        if ($book->copias_disponibles >= $book->copias_totales) {
+            return response()->json(['message' => 'Libro devuelto anteriormente'], 422);
+        }
+    
+        // Registrar la devolución
+        $loan->fecha_devolucion = now();
+        $loan->save();
+    
+        // Actualizar el libro
+        $book->copias_disponibles += 1;
+        if ($book->copias_disponibles > 0) {
+            $book->estado = true;
+        }
+        $book->save();
+    
+        return response()->json([
+            'message' => 'Devolución exitosa',
+            'data' => [
+                'loan_id' => $loan->id,
+                'solicitante' => $loan->solicitante,
+                'fecha_prestamo' => $loan->fecha_prestamo,
+                'fecha_devolucion' => $loan->fecha_devolucion,
+                'book_id' => $loan->book_id,
+            ]
+        ], 200);
     }
 
 }
