@@ -13,6 +13,8 @@ class BookFactory extends Factory
      */
     public function definition(): array
     {
+        $model = \App\Models\Book::class;
+
         return [
             'titulo' => $this->faker->sentence(),
             'descripcion' => $this->faker->paragraph(),
